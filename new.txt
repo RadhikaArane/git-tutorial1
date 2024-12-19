@@ -1,0 +1,80 @@
+import { useState, useEffect } from 'react';
+import HTMLFlipBook from 'react-pageflip';
+import { Document, Page } from 'react-pdf/dist/esm/entry.webpack';
+import pdf from "./Sample.pdf";
+import { IoMdClose } from "react-icons/io";
+import useSound from 'use-sound';
+import pageFlipSound from './turn 2a.mp3'; // Import the sound file
+
+function Flipbook(props) {
+    const [numPages, setNumPages] = useState(null);
+    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+    const [playSound] = useSound(pageFlipSound, { volume: 1.0 });
+
+    useEffect(() => {
+        function updateDimensions() {
+            setDimensions({
+                width: window.innerWidth,
+                height: window.innerHeight
+            });
+        }
+
+        window.addEventListener('resize', updateDimensions);
+        updateDimensions();
+
+        return () => window.removeEventListener('resize', updateDimensions);
+    }, []);
+
+    function onDocumentLoadSuccess({ numPages }) {
+        setNumPages(numPages);
+    }
+
+    function pagesList() {
+        const pages = [];
+        for (let i = 1; i <= numPages; i++) {
+            pages.push(
+                <div key={i} className="demoPage">
+                    <Page
+                        width={Math.min(dimensions.width * 0.4, 600)}
+                        pageNumber={i}
+                    />
+                </div>
+            );
+        }
+        return pages;
+    }
+
+    const bookWidth = Math.min(dimensions.width * 0.8, 1200);
+    const bookHeight = dimensions.height * 0.8;
+
+    // Function to handle page flips and play sound
+    const handlePageFlip = () => {
+        playSound();
+    };
+
+    return (
+        <Document
+            file={pdf}
+            onLoadSuccess={onDocumentLoadSuccess}
+            className='flex items-center justify-center overflow-hidden'
+        >
+            <HTMLFlipBook
+                width={bookWidth / 2}
+                height={bookHeight}
+                size="stretch"
+                minWidth={600}
+                maxWidth={1000}
+                minHeight={700}
+                maxHeight={1533}
+                showCover={false}
+                className="w-full h-full"
+                onFlip={handlePageFlip} // Assuming there's an onFlip event or similar
+            >
+                {pagesList()}
+            </HTMLFlipBook>
+        </Document>
+    );
+};
+
+export default Flipbook;
+
